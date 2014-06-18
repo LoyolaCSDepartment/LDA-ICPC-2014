@@ -1,0 +1,12 @@
+#!/bin/csh
+
+cd <FIX ME>/topic-models/aabbcc-models
+
+echo "for this study set data_points in do-aabbcc to 1000"
+echo "and use 3/2 not 9/4 used in the other studies"
+# comment out second
+#   $alpha = $alpha * 3/2;  # half \alpha resolution
+
+foreach beta (1e-07 1e-01 1e-06 1e-05 1e-04 1e-03 1e-02 1e-00 1e+01 1e+02)
+  cook-aabbcc $beta 20000      
+end

@@ -1,0 +1,263 @@
+#!/usr/bin/perl
+# filter topic output of R 
+# unsplit columns of matrcies
+# output only topics with a significant contriduction for each document
+# top of file is topic word matrix then the following
+#          Topic #1     Topic #2     Topic #3     Topic #4     Topic #5
+# d1   1.915893e-01 1.785714e-11 1.785714e-11 1.785714e-11 1.785714e-11
+# ...
+# d117 1.569424e-01 1.747237e-01 1.211595e-02 9.813322e-02 4.472829e-01
+#          Topic #6     Topic #7     Topic #8
+# d1   8.084107e-01 1.785714e-11 1.785714e-11
+# ...
+# d117 2.891118e-02 2.653289e-02 5.535773e-02
+#
+# reorganize so that each line is a document contining only its topics in order
+
+# because specific topic numbers are not meaningful, we can't dump and
+# then count the topics in each documents.  as ilustrated in the following
+#     run 1           run 2
+#     t1 t2 t3      t1 t2 t3
+# d1  x  x          x     x
+# d2  x     x       x  x
+#
+# for document 1 we have "t1 t2" from run 1 and "t1 t3" from run 2.
+# in essence t2 adn t3 have swapped identities.
+# output by topic we get
+# run 1:  t1: d1, d2   t2: d1  t3: d2
+# run 2:  t1: d1, d2   t2: d2  t3: d1
+# thus run 1 identifiers topics with d1-d2, d1, d2
+# while run 2 identifies topics with d1-d2, d2, d1
+# becaue the order of the topics does nto matter we can sort these
+# two list producing two copies of d1, d1-d2, d2 
+
+
+
+use strict;
+use warnings;
+local $SIG{__WARN__} = \&Carp::cluck;
+
+($#ARGV == 0) or die "usage: filter-topic-document <R lda output file>";
+
+open ROUTPUT, "<$ARGV[0]" or die $!;
+
+# scan off word-topic model
+# my $line = "a";
+# while (<ROUTPUT>)        
+# {
+  # chomp($_);
+  # $line = $_;
+  # last if /^ *    Topic #1 /;
+# }
+# 
+#  print "bing at line ", $line;
+
+my $dataset = 1;
+my @wordHeaders = ();
+my @wordTopic = ();
+my $maxTopic = -1.0;
+my @theta = ();
+my $maxdoc = -1.0;
+my $alpha = -1.0;
+
+while (<ROUTPUT>)        
+{
+  if (/^alpha =/)
+  {
+      $alpha = $_;
+      $alpha =~ s/alpha = //;
+      chomp $alpha;
+      next;
+  }
+  die $! if /^ \[ reached getOption/;  # hack fix R to not generate this
+# line is either word column headings, ^Topic #.*, topic headings, or "d#.*"
+
+  my @values = split(" ", $_);
+  if (/^BREAK BREAK BREAK/)
+  {
+      # outputWords($dataset, $maxTopic, \@wordHeaders, \@wordTopic);
+      outputHipTopics($dataset, $maxdoc, $alpha, \@theta);
+      @wordHeaders = ();
+      @wordTopic = ();
+      $maxTopic = -1.0;
+      @theta = ();
+      $maxdoc = 0;
+      $dataset++;
+      next;
+  }
+  elsif (/^Topic /)
+  {
+    my $tnum = shift @values;  # shift off "Topic"
+    $tnum = shift @values;     # shift off "#n"
+    $tnum =~ s/^#//;
+    my $x = $wordTopic[$tnum];
+    if (! $x)
+    {
+      # print "\n*** create \n" if $docnum == 110;
+      my @tmp = ();
+      $wordTopic[$tnum] = [@tmp];
+    }
+    $x = $wordTopic[$tnum];
+    push @$x, @values;
+    $wordTopic[$tnum] = $x;
+    $maxTopic = $tnum if $tnum > $maxTopic;
+  } 
+  elsif (/^d/)
+  {
+    my $docnum = shift @values;
+    $docnum =~ s/^d//;
+    # append values to list for docnum
+    my $x = $theta[$docnum];
+    
+    if (! $x)
+    {
+      # print "\n*** create \n" if $docnum == 110;
+      my @tmp = ();
+      $theta[$docnum] = [@tmp];
+    }
+  
+    $x = $theta[$docnum];
+    push @$x, @values;
+    $theta[$docnum] = $x;
+    $maxdoc = $docnum if $docnum > $maxdoc;
+  }
+  elsif (/ Topic #/)
+  {
+    # print "ignoring $_\n";
+  }
+  else  # list of words (column headings)
+  {
+    push @wordHeaders, @values;
+  }
+
+}
+
+# outputWords($dataset, $maxTopic, \@wordHeaders, \@wordTopic);
+outputHipTopics($dataset, $maxdoc, $alpha, \@theta);
+
+exit 0;
+
+# old
+foreach my $i (1..$maxdoc)
+{
+  my $data = $theta[$i];
+  print "@$data\n";
+}
+
+
+close ROUTPUT;
+
+
+
+sub outputHipTopics
+{
+  my ($dataset, $maxdoc, $alpha, $t) = @_;
+  return if $maxdoc < 0;
+  my @theta = @{$t};
+
+
+  my $max = -1;
+  my $x = $theta[1];
+  my @row = @$x;
+  my $numTopics = $#row;
+  my $threshold = 0.999 / (1+$numTopics);  # 0.999 is 1.00 - epsilon
+  my @k2 = ();
+  # print "max docs = $maxdoc, topic count $#theta words are ", join(" ", @theta), "\n";
+  foreach my $jj (0..$numTopics)
+  {
+    my $empty = 1;
+    my @keepers = ();
+ #print "\n";
+    foreach my $ii (1..$maxdoc)
+    {
+      my $x = $theta[$ii];
+      my @row = @$x;
+      $x = $row[$jj];
+      if (! $x )
+      {
+        print"UNDEF at $ii, $jj!\n";
+        exit 1;
+      }
+ # print "IT $x ";
+      if ($x > $threshold)  
+      {
+        # print "DS $dataset" if $dataset > 0;
+        $dataset = -1;
+        # print "(Doc $i: " if $empty;
+        $empty = 0;
+        # print "$$j ";
+        push @keepers, $ii;
+      }
+      # print "\n$ii $jj of $numTopics row[][] $row[$jj] -- ";
+      $max = $x if $max < $x;
+      # print "$ii $jj of $numTopics row[][] $row[$jj] -- ";
+    }
+    # print ")  " if ! $empty;
+    @keepers = sort @keepers;
+    my $t = join("-", @keepers);
+    # print "Adding $t\n" if ! $empty;
+    push @k2, $t if ! $empty;
+  }
+  
+  @k2 = sort @k2;
+  # print "( ", join(" ", @k2), " ) doc max $max\n" if $dataset < 0;
+  print "$alpha ", join(" ", @k2), " . . .\n" if $dataset < 0;
+  # print "Doc max = $max\n";
+  # print "\n" if $dataset < 0;
+}
+
+
+sub outputWords
+{
+  my ($dataset, $maxTopic, $w, $wordTopic ) = @_;
+  return if $maxTopic < 0;
+  my @words = @{$w};
+
+  my $max = -1;
+  my $x = $wordTopic[1];
+  my @row = @$x;
+  my $rowLen = $#row;
+  my @k2 = ();
+  # print "max topics = $maxTopic, wourd count $#words words are ", join(" ", @words), "\n";
+  foreach my $i (1..$maxTopic)
+  {
+    my $x = $wordTopic[$i];
+    my @row = @$x;
+    my $first = 1;
+    my @keepers = ();
+    foreach my $j (0..$rowLen)
+    {
+      my $x = $row[$j];
+      if (! $x )
+      {
+        print"UNDEF at $i, $j!\n";
+        exit 1;
+      }
+# max for out-gzip.tagit-100-beta-1e-00/alpha-1e-06 was 0.0262582057
+# max for a few of out-gzip.tagit-100-beta-1e-07/alpha-1e-06 was 9.999837e-01
+      # if ($x > 0.0137529691) # used with 1e-00
+      if ($x > 0.80)  # used with 1e-07
+      {
+        # print "DS $dataset" if $dataset > 0;
+        $dataset = -1;
+        # print "(Topic $i: " if $first;
+        $first = 0;
+        # print "$words[$j] ";
+        push @keepers, $words[$j];
+      }
+      # print "\n$i $j of $rowLen row[][] $row[$j] -- ";
+      $max = $x if $max < $x;
+      # print "$i $j of $rowLen row[][] $row[$j] -- ";
+    }
+    # print ")  " if ! $first;
+    @keepers = sort @keepers;
+    my $t = join("-", @keepers);
+    # print "Adding $t\n" if ! $first;
+    push @k2, $t if ! $first;
+  }
+  
+  @k2 = sort @k2;
+  print "( ", join(" ", @k2), " )\n" if $dataset < 0;
+  # print "Topic max = $max\n";
+  # print "\n" if $dataset < 0;
+}

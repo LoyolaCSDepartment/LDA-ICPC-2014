@@ -1,0 +1,28 @@
+this file is .../norm/topic-models/aabbcc-models/corpus/00-readme
+
+to build the aabbcc corpus
+
+# convert a corpus into the format that R requires.
+ ../../bin/massage-gibbs-in-to-R docs.txt 
+ mv gibbs_mapping.txt aabbcc_mapping.txt
+ mv gibbs_vocab.txt aabbcc_vocab.txt
+ mv gibbs_matrix.txt aabbcc_matrix.txt
+# run the example (on a 10.4 machine)
+ ../../bin/run-Rs-lda aabbcc_matrix.txt aabbcc_vocab.txt 3 0.000001 0.000001 aabbcc 50000 aabbcc_mapping.txt
+
+the scipt massage-gibbs-in-to-R takes a collection as a single file of space
+separated words one document per line with first line being document count
+(this is the format gibbs tool use)
+
+here is some example output 
+
+                   aa           bb           cc
+Topic #1 1.250000e-07 9.999998e-01 1.250000e-07
+Topic #2 6.666665e-01 1.666666e-07 3.333333e-01
+Topic #3 9.999997e-01 1.428571e-07 1.428571e-07
+       Topic #1     Topic #2     Topic #3
+d1 2.499998e-07 2.499998e-07 9.999995e-01
+d2 9.999996e-01 1.999999e-07 1.999999e-07
+d3 4.999999e-01 1.666666e-07 4.999999e-01
+d4 1.666666e-07 9.999997e-01 1.666666e-07
+

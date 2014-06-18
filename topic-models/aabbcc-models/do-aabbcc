@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+# generates aabbcc data using R  
+# fyi hard codes 3 topics and 20000 iterations
+
+use strict;
+use warnings;
+
+my $base = "<FIX ME>/topic-models/";
+
+# original study used 1000 ... does the fidelity matter?
+my $datapoints = 1000;  # use 10 for testing
+# $datapoints = 10; print STDERR "Warning test mode only 10 data points\n";  sleep 10;
+
+my $matrix = "corpus/aabbcc_matrix.txt";
+my $vocab = "corpus/aabbcc_vocab.txt";
+my $mapping = "corpus/aabbcc_mapping.txt";
+
+die "Usage: do-aabbcc beta iterations" if ($#ARGV != 1) ;
+my $beta = $ARGV[0];
+my $iterations = $ARGV[1];
+
+my $outdir = "out-aabbcc-3-$iterations-beta-$beta";
+mkdir $outdir;
+
+# for alpha = 0.0001 to 50 step 3/2
+#  for i = 1 to 100
+#    plot alpha
+
+my $alpha = 0.000001;
+while ($alpha < 100)
+{
+   print "alpha = $alpha\n";
+   open (OUT, ">$outdir/alpha-$alpha") or dir $!;
+   print OUT "alpha = $alpha\n";
+   my $i;
+   for($i=0; $i<$datapoints; $i++)
+   {
+       my $out = `$base/bin/run-Rs-lda $matrix $vocab 3 $alpha $beta aabbcc $iterations $mapping`;
+       print OUT "BREAK BREAK BREAK\n";
+       print OUT $out;
+   }
+
+   close OUT;
+   $alpha = $alpha * 3/2;
+#   $alpha = $alpha * 3/2;  # half \alpha resolution
+}

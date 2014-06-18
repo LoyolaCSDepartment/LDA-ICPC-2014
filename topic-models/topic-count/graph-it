@@ -1,0 +1,55 @@
+#!/bin/tcsh
+
+if ( $#argv != 2 ) then
+    echo "usage $argv[0] score-file pictures-directory"
+    exit -1
+endif
+
+# set GNUPLOT = /research/projects/semeru/gnuplot-4.4.4/src/gnuplot
+set GNUPLOT = /usr/bin/gnuplot
+
+# currently an unused option
+set which_ave = "USE_AVERAGE_FILE=1"
+
+# assume first argument (file name) has the form 
+#    "average_<name>_<type>_<suffix-remove>.txt"
+# for example  average_hack_doc_1.txt
+set file = $argv[1]
+set pics = $argv[2]
+set x = $file:t:r
+set name = `echo $x | awk -F_ '{print $2;}'`
+set type = `echo $x | awk -F_ '{print $3;}'`
+set suffix = `echo $x | awk -F_ '{print $4;}'`
+
+if ($type == "topic") then
+    set title = "average topic score"
+else
+    set title = "average document score"
+endif
+
+set datafile = "x.dat.$$"
+sort -g -t, -k1,1 -k2,2 $file | awk -v $which_ave -F, -f graph-it.awk  > ! $datafile
+$GNUPLOT  << PLOT
+set title "$title for $name using suffix remove of $suffix"
+set title  offset character 0, 0, 0 font "" norotate
+set terminal png  size 640, 480
+set output "$pics/$name-$type-$suffix.png"
+set key title "neighbors"
+set xlabel "topics"
+set xlabel  offset character 0, 0, 0 font "" textcolor lt -1 norotate
+set ylabel "Score"
+set ylabel  offset character 0, 0, 0 font "" textcolor lt -1 rotate by -270
+
+plot "$datafile" using 1:2 title '5' with lines , "$datafile" using 1:3 title '10' with lines,   \
+     "$datafile" using 1:4 title '25' with lines,  "$datafile" using 1:5 title '50' with lines
+PLOT
+
+mkdir_quiet rm-us
+/bin/mv $datafile rm-us
+
+exit 0
+
+
+plot "y" using 1:2 title '5' with lines, "y" using 1:3 title '10' with lines, "y" using 1:4 title '25' with lines, "y" using 1:5 title '50' with lines
+set terminal x11
+     set size 1,1

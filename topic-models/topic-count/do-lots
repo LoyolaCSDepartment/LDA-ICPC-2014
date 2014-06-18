@@ -1,0 +1,29 @@
+#!/bin/tcsh
+
+cd <FIX ME>/topic-models/topic-count
+
+foreach x (1 2 3 )
+  do 1 1000 ../../xml-inputs/gzip.nicad.xml
+end
+
+exit 0
+
+#start with cut and paste of 
+
+cd <FIX ME>/topic-models/topic-count
+
+# replace foo with machines of your choice
+foreach m ( foo )
+   ssh $m <FIX ME>/topic-models/topic-count/do-lots < /dev/null &
+   sleep 10
+end
+
+# replace foo with machines of your choice
+# to kill all
+foreach m ( foo )
+
+  # ssh $m  "/bin/rm -r /scratch/topics/out.*" &
+  # sleep 1
+   ssh $m "killall do-lots; killall do ;  killall run-Rs-lda ; killall R"
+# kill python ....
+end

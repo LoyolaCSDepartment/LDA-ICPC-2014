@@ -1,0 +1,52 @@
+#!/bin/tcsh
+
+set base = "<FIX ME>/topic-models/"
+
+switch ($#argv)
+  case "2":
+      set beta = $argv[1]
+      set iterations = $argv[2]
+      breaksw
+  case "1":
+      set beta = $argv[1]
+      set iterations = "20000"
+      breaksw
+  default 
+      echo "usage: cook beta [iterations]"
+      exit -1
+endsw
+
+set program = "aabbcc"
+
+set out = "out-$program-3-$iterations-beta-$beta"
+
+if (! -e $out ) then
+    echo "can't find $out ... come back later"
+    exit -1
+endif
+
+# foreach n (1 5 25 100 1000)
+  /bin/cp /dev/null data-rm
+foreach n (1 5 25 100 )
+  foreach f ($out/alpha-1e-06)
+    cat $f | $base/bin/R-to-mallet | head -n $n | sed -e "s/1e-06/$n/" >> data-rm
+  end
+  
+end
+  cat data-rm | sed -e 's/iteration [0-9]*//' -e 's/-\.\.//g' \
+           -e 's/\.\.-//g' | sort | uniq -c | sort -g -k2,2 > ! x
+  cat x | $base/bin/cook | sed -e 's/\t/,/g' > ! cooked-aabbcc-$iterations-beta-$beta-nstudy.csv
+
+
+../../bin/csv2heatmap cooked-aabbcc-20000-beta-1e-05-n*
+
+
+exit 0
+# cat x | ../mallet/a.out | sed '1h;1d;$\!H;$\!d;G' | sed -e 's/\t/,/g' > ! cooked-aabbcc-$iterations-beta-$beta.csv
+
+# produce topic document output
+cat $out/* | $base/bin/topic-dist - | sort | uniq -c | sort -g -k2,2 >! x
+cat x | $base/bin/cook | sed -e 's/\t/,/g' -e 's/  */ /g' > ! doc-top-aabbcc-$iterations-beta-$beta.csv
+
+echo "cooked output left in cooked-aabbcc-$iterations-beta-$beta.csv"
+

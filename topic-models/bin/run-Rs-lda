@@ -1,0 +1,39 @@
+#!/bin/bash
+
+input_matrix=$1
+input_vocab=$2
+input_topics=$3
+input_alpha=$4
+input_beta=$5
+input_name=$6
+input_iter=$7
+input_mapping=$8
+
+if [[ ! -f $input_matrix || ! -f $input_vocab || $input_topics == "" || $input_alpha == "" || $input_beta == "" || $input_name == "" || ! -f $input_mapping ]]; then
+    echo "Usage: $0 <corpus (R format)> <vocab (R format)> <# topics> <alpha> <beta> <proj name> <iterations> <mapping>"
+	exit 0;
+fi
+
+
+tDir=`pwd`
+dir=$input_name.$input_topics"topics-"$input_alpha"a-"$input_beta"b"
+
+# Relative path?
+if [[ "$1" != /* ]] 
+then
+  input_matrix=$tDir/$input_matrix
+  input_vocab=$tDir/$input_vocab
+  input_mapping=$tDir/$input_mapping
+fi
+
+if [ ! -d $dir ] 
+then
+  mkdir $dir
+fi
+
+cd $dir
+
+<FIX ME>/topic-models/bin/run-lda.R $input_matrix $input_vocab $input_topics $input_alpha $input_beta $input_name.$input_topics"topics-"$input_alpha"a-"$input_beta"b-ldaH.sims" $input_iter $input_mapping
+
+cd $tDir
+/bin/rm -r $dir

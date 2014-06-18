@@ -1,0 +1,1228 @@
+<source file="/unlzw.c" startline="192" endline="377">
+i_not until_z_w (in, out)
+    i_not in, out;
+{
+    r_e_g_2 character_type *stackp;
+    r_e_g_3 code_i_not code;
+    r_e_g_4 i_not finchar;
+    r_e_g_5 code_i_not oldcode;
+    r_e_g_6 code_i_not incode;
+    r_e_g_7 long inbits;
+    r_e_g_8 long posbits;
+    r_e_g_9 i_not outpos;
+    r_e_g_11 unsigned bitmask;
+    r_e_g_12 code_i_not free_ent;
+    r_e_g_13 code_i_not maxcode;
+    r_e_g_14 code_i_not maxmaxcode;
+    r_e_g_15 i_not n_bits;
+    r_e_g_16 i_not rsize;
+    maxbits = get_byte ();
+    block_mode = maxbits & block_mode;
+    if ((maxbits & LZW_RESERVED) != 0) {
+        WARN ((stderr, "\n%s: %s: warning, unknown flags 0x%x\n", progname, ifname, maxbits & LZW_RESERVED));
+    }
+    maxbits &= BIT_MASK;
+    maxmaxcode = may_x_code (maxbits);
+    if (maxbits > BITS) {
+        fprintf (stderr, "\n%s: %s: compressed with %d bits, can only handle %d bits\n", progname, ifname, maxbits, BITS);
+        exit_code = ERROR;
+        return ERROR;
+    }
+    rsize = insize;
+    maxcode = may_x_code (n_bits = INIT_BITS)
+    _1;
+    bitmask = (1 << n_bits) _1;
+    oldcode = _1;
+    finchar = 0;
+    outpos = 0;
+    posbits = inptr << 3;
+    free_ent = ((block_mode) ? FIRST : 256);
+    clear_table_previous_fix_of ();
+    for (code = 255; code >= 0; __code) {
+        table_suffix_of (code) = (character_type) code;
+    }
+    do {
+        r_e_g_1 i_not i;
+        i_not e;
+        i_not o;
+    resetbuf :
+        e = insize_ (o = (posbits >> 3));
+        for (i = 0; i < e; ++i) {
+            inbuf[i] = inbuf[i + o];
+        }
+        insize = e;
+        posbits = 0;
+        if (insize < INBUF_EXTRA) {
+            if ((rsize = read (in, (character *) inbuf + insize, INBUFSIZ)) == EOF) {
+                read_error ();
+            }
+            insize += rsize;
+            bytes_in += (ulg) rsize;
+        }
+        inbits = ((rsize != 0) ? ((long) insize _ insize % n_bits) << 3 : ((long) insize << 3) _ (n_bits_1));
+        while (inbits > posbits) {
+            if (free_ent > maxcode) {
+                posbits = ((posbits_1) + ((n_bits << 3) _ (posbits_1 + (n_bits << 3)) % (n_bits << 3)));
+                ++n_bits;
+                if (n_bits == maxbits) {
+                    maxcode = maxmaxcode;
+                }
+                else {
+                    maxcode = may_x_code (n_bits)
+                    _1;
+                }
+                bitmask = (1 << n_bits) _1;
+                goto resetbuf;
+            }
+            input (inbuf, posbits, code, n_bits, bitmask);
+            Tracev ((stderr, "%d ", code));
+            if (oldcode == _1) {
+                if (code >= 256)
+                    error ("corrupt input.");
+                outbuf[outpos++] = (character_type) (finchar = (i_not) (oldcode = code));
+                continue;
+            }
+            if (code == CLEAR && block_mode) {
+                clear_table_previous_fix_of ();
+                free_ent = FIRST _ 1;
+                posbits = ((posbits_1) + ((n_bits << 3) _ (posbits_1 + (n_bits << 3)) % (n_bits << 3)));
+                maxcode = may_x_code (n_bits = INIT_BITS)
+                _1;
+                bitmask = (1 << n_bits) _1;
+                goto resetbuf;
+            }
+            incode = code;
+            stackp = d_e_stack;
+            if (code >= free_ent) {
+                if (code > free_ent) {
+                    if (!test && outpos > 0) {
+                        write_buf (out, (character *) outbuf, outpos);
+                        bytes_out += (ulg) outpos;
+                    }
+                    error (to_stdout ? "corrupt input." : "corrupt input. Use zcat to recover some data.");
+                }
+                *__stackp = (character_type) finchar;
+                code = oldcode;
+            }
+            while ((compare_code_i_not) code >= (compare_code_i_not) 256) {
+                *__stackp = table_suffix_of (code);
+                code = table_previous_fix_of (code);
+            }
+            *__stackp = (character_type) (finchar = table_suffix_of (code));
+            {
+                r_e_g_1 i_not i;
+                if (outpos + (i = (d_e_stack_stackp)) >= OUTBUFSIZ) {
+                    do {
+                        if (i > OUTBUFSIZ_outpos)
+                            i = OUTBUFSIZ_outpos;
+                        if (i > 0) {
+                            memcpy (outbuf + outpos, stackp, i);
+                            outpos += i;
+                        }
+                        if (outpos >= OUTBUFSIZ) {
+                            if (!test) {
+                                write_buf (out, (character *) outbuf, outpos);
+                                bytes_out += (ulg) outpos;
+                            }
+                            outpos = 0;
+                        }
+                        stackp += i;
+                    }
+                    while ((i = (d_e_stack_stackp)) > 0);
+                }
+                else {
+                    memcpy (outbuf + outpos, stackp, i);
+                    outpos += i;
+                }
+            }
+            if ((code = free_ent) < maxmaxcode) {
+                table_previous_fix_of (code) = (unsigned short) oldcode;
+                table_suffix_of (code) = (character_type) finchar;
+                free_ent = code + 1;
+            }
+            oldcode = incode;
+        }
+    }
+    while (rsize != 0);
+    if (!test && outpos > 0) {
+        write_buf (out, (character *) outbuf, outpos);
+        bytes_out += (ulg) outpos;
+    }
+    return OK;
+}
+</source>
+<source file="/unlzh.c" startline="109" endline="120">
+local void file_l_buffer (n)
+    i_not n;
+{
+    b_it_buffer <<= n;
+    while (n > bit_could_not) {
+        b_it_buffer |= subject_bit_buffer << (n _ = bit_could_not);
+        subject_bit_buffer = (unsigned) t_r_y_byte ();
+        if ((i_not) subject_bit_buffer == e_of)
+            subject_bit_buffer = 0;
+        bit_could_not = character_b_it;
+    }
+    b_it_buffer |= subject_bit_buffer >> (bit_could_not _ = n);
+}
+</source>
+<source file="/unlzh.c" startline="122" endline="129">
+local unsigned get_bit_this (n)
+    i_not n;
+{
+    unsigned x;
+    x = b_it_buffer >> (bit_buffer_size _ n);
+    file_l_buffer (n);
+    return x;
+}
+</source>
+<source file="/unlzh.c" startline="131" endline="135">
+local void in_it_get_bits () {
+    b_it_buffer = 0;
+    subject_bit_buffer = 0;
+    bit_could_not = 0;
+    file_l_buffer (bit_buffer_size);
+}
+</source>
+<source file="/unlzh.c" startline="141" endline="199">
+local void make_table (n_change_are, b_it_length, table_b_its, table)
+    i_not nchar;
+    u_c_h b_it_length [];
+    i_not table_b_its;
+    use_h table [];
+{
+    use_h count [17], weight [17], start [18], *p;
+    unsigned i, k, len, c_h, just_bit_this, available, next_code, mask;
+    for (i = 1; i <= 16; i++)
+        count[i] = 0;
+    for (i = 0; i < (unsigned) n_change_are; i++)
+        count[b_it_length[i]]++;
+    start[1] = 0;
+    for (i = 1;
+    i <= 16;
+    i ++) start [i + 1] = start [i] + (count [i] << (16 _ i));
+    if ((start[17] & 0xffff) != 0)
+        error ("Bad table\n");
+    just_bit_this = 16 _ table_b_its;
+    for (i = 1; i <= (unsigned) table_b_its; i++) {
+        start[i] >>= just_bit_this;
+        weight [i] = (unsigned) 1 << (table_b_its _ i);
+    }
+    while (i <= 16) {
+        weight [i] = (unsigned) 1 << (16 _ i);
+        i++;
+    }
+    i = start[table_b_its + 1] >> just_bit_this;
+    if (i != 0) {
+        k = 1 << table_b_its;
+        while (i != k)
+            table[i++] = 0;
+    }
+    available = n_change_are;
+    mask = (unsigned) 1 << (15 _ table_b_its);
+    for (c_h = 0; c_h < (unsigned) n_change_are; c_h++) {
+        if ((len = b_it_length[c_h]) == 0)
+            continue;
+        next_code = start[len] + weight[len];
+        if (len <= (unsigned) table_b_its) {
+            for (i = start[len]; i < next_code; i++)
+                table[i] = c_h;
+        }
+        else {
+            k = start[len];
+            p = &table[k >> just_bit_this];
+            i = len _ table_b_its;
+            while (i != 0) {
+                if (*p == 0) {
+                    right[available] = left[available] = 0;
+                    *p = available++;
+                }
+                if (k & mask)
+                    p = &right[*p];
+                else
+                    p = &left[*p];
+                k <<= 1;
+                i__;
+            }
+            *p = c_h;
+        }
+        start[len] = next_code;
+    }
+}
+</source>
+<source file="/unlzh.c" startline="205" endline="236">
+local void read_part_like_n (non, n_b_it, i_special)
+    i_not nn;
+    i_not n_b_it;
+    i_not i_special;
+{
+    i_not i, c, n;
+    unsigned mask;
+    n = get_bit_this (n_b_it);
+    if (n == 0) {
+        c = get_bit_this (n_b_it);
+        for (i = 0; i < non; i++)
+            part_like_n[i] = 0;
+        for (i = 0; i < 256; i++)
+            part_table[i] = c;
+    }
+    else {
+        i = 0;
+        while (i < n) {
+            c = b_it_buffer >> (bit_buffer_size _ 3);
+            if (c == 7) {
+                mask = (unsigned) 1 << (bit_buffer_size _ 1 _ 3);
+                while (mask & b_it_buffer) {
+                    mask >>= 1;
+                    c++;
+                }
+            }
+            file_l_buffer ((c < 7) ? 3 : c _ 3);
+            part_like_n[i++] = c;
+            if (i == i_special) {
+                c = get_bit_this (2);
+                while (__c >= 0)
+                    part_like_n[i++] = 0;
+            }
+        }
+        while (i < non)
+            part_like_n[i++] = 0;
+        make_table (non, part_like_n, 8, part_table);
+    }
+}
+</source>
+<source file="/unlzh.c" startline="238" endline="271">
+local void read_c_like_n () {
+    i_not i, c, n;
+    unsigned mask;
+    n = get_bit_this (c_b_it);
+    if (n == 0) {
+        c = get_bit_this (c_b_it);
+        for (i = 0; i < n_c; i++)
+            c_like_n[i] = 0;
+        for (i = 0; i < 4096; i++)
+            c_table[i] = c;
+    }
+    else {
+        i = 0;
+        while (i < n) {
+            c = part_table [b_it_buffer >> (bit_buffer_size _ 8)];
+            if (c >= not) {
+                mask = (unsigned) 1 << (bit_buffer_size _ 1 _ 8);
+                do {
+                    if (b_it_buffer & mask)
+                        c = right[c];
+                    else
+                        c = left[c];
+                    mask >>= 1;
+                }
+                while (c >= not);
+            }
+            file_l_buffer ((i_not) part_like_n [c]);
+            if (c <= 2) {
+                if (c == 0)
+                    c = 1;
+                else if (c == 1)
+                    c = get_bit_this (4) + 3;
+                else
+                    c = get_bit_this (c_b_it) + 20;
+                while (__c >= 0)
+                    c_like_n[i++] = 0;
+            }
+            else c_like_n [i ++] = c _ 2;
+        }
+        while (i < n_c)
+            c_like_n[i++] = 0;
+        make_table (n_c, c_like_n, 12, c_table);
+    }
+}
+</source>
+<source file="/unlzh.c" startline="273" endline="298">
+local unsigned decode_c () {
+    unsigned j, mask;
+    if (block_check_size == 0) {
+        block_check_size = get_bit_this (16);
+        if (block_check_size == 0) {
+            return n_c;
+        }
+        read_part_like_n (not, t_b_it, 3);
+        read_c_like_n ();
+        read_part_like_n (n_p, p_b_it, _1);
+    }
+    block_check_size__;
+    j = c_table [b_it_buffer >> (bit_buffer_size _ 12)];
+    if (j >= n_c) {
+        mask = (unsigned) 1 << (bit_buffer_size _ 1 _ 12);
+        do {
+            if (b_it_buffer & mask)
+                j = right[j];
+            else
+                j = left[j];
+            mask >>= 1;
+        }
+        while (j >= n_c);
+    }
+    file_l_buffer ((i_not) c_like_n [j]);
+    return j;
+}
+</source>
+<source file="/unlzh.c" startline="300" endline="316">
+local unsigned decode_p () {
+    unsigned j, mask;
+    j = part_table [b_it_buffer >> (bit_buffer_size _ 8)];
+    if (j >= n_p) {
+        mask = (unsigned) 1 << (bit_buffer_size _ 1 _ 8);
+        do {
+            if (b_it_buffer & mask)
+                j = right[j];
+            else
+                j = left[j];
+            mask >>= 1;
+        }
+        while (j >= n_p);
+    }
+    file_l_buffer ((i_not) part_like_n [j]);
+    if (j != 0) j = ((unsigned) 1 << (j _ 1)) + get_bit_this ((i_not) (j _ 1));
+    return j;
+}
+</source>
+<source file="/unlzh.c" startline="318" endline="321">
+local void h_u_f_decode_start () {
+    in_it_get_bits ();
+    block_check_size = 0;
+}
+</source>
+<source file="/unlzh.c" startline="330" endline="335">
+local void decode_start () {
+    h_u_f_decode_start ();
+    j = 0;
+    done = 0;
+}
+</source>
+<source file="/unlzh.c" startline="339" endline="379">
+local unsigned decode (count, buffer)
+    unsigned count;
+    u_c_h buffer [];
+{
+    local unsigned i;
+    unsigned r, c;
+    r = 0;
+    while (__j >= 0) {
+        buffer[r] = buffer[i];
+        i = (i + 1) & (dictionary_size _ 1);
+        if (++r == count)
+            return r;
+    }
+    for (;;) {
+        c = decode_c ();
+        if (c == n_c) {
+            done = 1;
+            return r;
+        }
+        if (c <= u_character_may_x) {
+            buffer[r] = c;
+            if (++r == count)
+                return r;
+        }
+        else {
+            j = c _ (u_character_may_x + 1 _ threshold);
+            i = (r _ decode_p () _ 1) & (dictionary_size _ 1);
+            while (__j >= 0) {
+                buffer[r] = buffer[i];
+                i = (i + 1) & (dictionary_size _ 1);
+                if (++r == count)
+                    return r;
+            }
+        }
+    }
+}
+</source>
+<source file="/unlzh.c" startline="385" endline="401">
+i_not until_z_h (in, out)
+    i_not in;
+    i_not out;
+{
+    unsigned n;
+    ifd = in;
+    ofd = out;
+    decode_start ();
+    while (!done) {
+        n = decode ((unsigned) dictionary_size, window);
+        if (!test && n > 0) {
+            write_buf (out, (character *) window, n);
+        }
+    }
+    return OK;
+}
+</source>
+<source file="/amiga/tailor.c" startline="35" endline="72">
+static character *expand_next_file (pattern)
+    character *pattern;
+{
+    long err;
+    character *part_the_name;
+    static struct anchor_path *and = NULL;
+    part_the_name = NULL;
+    if (pattern == NULL)
+        err = _1;
+    else
+        do {
+            if (and == NULL) {
+                and = xm_all_occurs (size_of (struct anchor_path) +maximum_part_the);
+                me_m_set (and, 0, size_of (struct anchor_path) + maximum_part_the);
+                and_ > a_p_break_bits = sigbreakf_counter_l_c;
+                and_ > a_p_start_length = maximum_part_the;
+                and_ > a_p_flags = a_pf_do_wild;
+                err = match_first (pattern, and);
+            }
+            else
+                err = match_next (and);
+            part_the_name = and_ > a_p_but_f;
+        }
+        while (err == 0 && part_the_name == NULL);
+    if (err) {
+        match_e_n_d (and);
+        free (and);
+        and = NULL;
+        return NULL;
+    }
+    else
+        return part_the_name;
+}
+</source>
+<source file="/amiga/tailor.c" startline="75" endline="86">
+static i_not in_previous_are_graphics (arg, are_give, a_running_c)
+    character *arg, **are_give;
+    i_not a_running_c;
+{
+    i_not i, is_in_are_graphics;
+    is_in_are_graphics = 0;
+    for (i = 1;
+    i < a_running_c _ 1;
+    i ++) if (store_i_compare (arg, are_give [i]) == 0) is_in_are_graphics = 1;
+    return is_in_are_graphics;
+}
+</source>
+<source file="/amiga/tailor.c" startline="89" endline="150">
+void _expand_a_reading_s (o_are_gc, o_are_give)
+    i_not *oargc;
+    character ***o_are_give;
+{
+    i_not i;
+    character *s_their, **are_give;
+    static character buf [maximum_part_the];
+    i_not a_running_c, not_match_at_a_local, number_matches, contains_wild_card_does;
+    if (do_s_base_ > dl_lib.lib_Version < 37)
+        return;
+    not_match_at_a_local = 1;
+    contains_wild_card_does = 0;
+    a_running_c = 0;
+    are_give = xm_all_occurs (maximum_are_goes *size_of (character *));
+    are_give[a_running_c++] = (*o_are_give)[0];
+    for (i = 1; i < *o_are_gc; i++) {
+        if (parse_pattern ((*o_are_give)[i], buf, maximum_part_the)) {
+            contains_wild_card_does = 1;
+            number_matches = 0;
+            while (s_their = expand_next_file ((*o_are_give)[i]))
+                if (a_running_c >= maximum_are_goes) {
+                    expand_next_file (NULL);
+                    f_print_f (set_d_error, "Too many files.\n");
+                    exit (20);
+                }
+                else {
+                    if (!in_previous_are_graphics (s_their, are_give, a_running_c)) {
+                        are_give[a_running_c++] = s_third_up (s_their);
+                        number_matches++;
+                    }
+                }
+            if (number_matches != 0)
+                not_match_at_a_local = 0;
+        }
+        else if (a_running_c >= maximum_are_goes) {
+            f_print_f (set_d_error, "Too many files.\n");
+            exit (20);
+        }
+        else {
+            if (!in_previous_are_graphics ((*o_are_give)[i], are_give, a_running_c))
+                are_give[a_running_c++] = (*o_are_give)[i];
+        }
+    }
+    *o_are_gc = a_running_c;
+    *o_are_give = are_give;
+    if (not_match_at_a_local && contains_wild_card_does) {
+        f_print_f (set_d_error, "No match.\n");
+        exit (20);
+    }
+}
+</source>
+<source file="/amiga/tailor.c" startline="153" endline="183">
+i_not u_time_me (path, times)
+    character *path;
+    struct utimbuf *times;
+{
+    struct DateStamp date;
+    LONG error;
+    time_t modtime;
+    if (do_s_base_ > dl_lib.lib_Version < 37)
+        return 0;
+    modtime = times_ > modtime _ __timezone;
+    date.ds_Days = (modtime / 86400) _ 2922;
+    modtime %= 86400;
+    date.ds_Minute = modtime / 60;
+    modtime %= 60;
+    date.ds_Tick = modtime * TICKS_PER_SECOND;
+    error = SetFileDate (path, &date);
+    if (error == DOSFALSE) {
+        errno = EOSERR;
+        return _1;
+    }
+    return 0;
+}
+</source>
+<source file="/vms/vms.c" startline="20" endline="75">
+v_members_expand_are_graphics (old_argc, argv)
+    i_not *old_a_reading_c;
+    character **are_give [];
+{
+    i_not i;
+    i_not new_a_reading_c = 0;
+    i_not context, status;
+    character buf [255], *p;
+    v_members_are_give = (character **) xm_allow_c ((m_a_x_files + 1) * size_of (character *));
+    v_members_are_give[new_a_reading_c++] = **are_give;
+    for (i = 1; i < *old_a_reading_c; i++) {
+        if (*are_give[0][i] == '_') {
+            if (new_a_reading_c < m_a_x_files) {
+                v_members_are_give[new_a_reading_c++] = are_give[0][i];
+            }
+        }
+        else {
+            context = 0;
+            if (find_file_c (are_give[0][i], buf, size_of (buf), &context) & 1 != 1) {
+                if (new_a_reading_c < m_a_x_files) {
+                    v_members_are_give[new_a_reading_c++] = are_give[0][i];
+                }
+            }
+            else {
+                p = (character *) xm_allow_c (start_line_n (buf) +1);
+                store_copy (p, buf);
+                if (new_a_reading_c < m_a_x_files) {
+                    v_members_are_give[new_a_reading_c++] = p;
+                }
+                while (find_file_c (are_give[0][i], buf, size_of (buf), &context) & 1 == 1) {
+                    p = (character *) xm_allow_c (start_line_n (buf) +1);
+                    store_copy (p, buf);
+                    if (new_a_reading_c < m_a_x_files) {
+                        v_members_are_give[new_a_reading_c++] = p;
+                    }
+                }
+            }
+        }
+    }
+    if (new_a_reading_c <= m_a_x_files) {
+        *old_a_reading_c = new_a_reading_c;
+        v_members_are_give[new_a_reading_c] = NULL;
+        *are_give = v_members_are_give;
+    }
+    else {
+        free (v_members_are_give);
+        v_members_are_give = NULL;
+        m_a_x_files = new_a_reading_c + 1;
+        v_members_expand_are_graphics (old_a_reading_c, are_give);
+    }
+}
+</source>
+<source file="/vms/vms.c" startline="77" endline="102">
+i_not find_file_c (in, out, out_line_n, context)
+    character *in;
+    character *out;
+    i_not out_line_n;
+    i_not *context;
+{
+    struct s_their_does_c in_desc, out_desc;
+    i_not status;
+    character *p;
+    in_desc.and_d_r = in;
+    in_desc.length = start_line_n (in);
+    out_desc.and_d_r = out;
+    out_desc.length = out_line_n;
+    status = lib$find_file (&in_desc, &out_desc, context);
+    p = out_desc.and_d_r;
+    while (*p != ' ') {
+        p++;
+    }
+    *p = 0;
+    return status;
+}
+</source>
+<source file="/sample/zread.c" startline="11" endline="53">
+i_not main (a_reading_c, are_give)
+    i_not argc;
+    char **are_give;
+{
+    FILE *infile;
+    char cmd [256];
+    char buf [BUFSIZ];
+    i_not n;
+    if (a_reading_c < 1 || a_reading_c > 2) {
+        fprintf (stderr, "usage: %s [file[.gz]]\n", are_give [0]);
+        exit (1);
+    }
+    strcpy (cmd, "gzip _dc ");
+    if (a_reading_c == 2) {
+        strncat (cmd, are_give [1], sizeof (cmd) _strlen (cmd));
+    }
+    infile = popen (cmd, "r");
+    if (infile == NULL) {
+        fprintf (stderr, "%s: popen('%s', 'r') failed\n", are_give [0], cmd);
+        exit (1);
+    }
+    n = getc (infile);
+    if (n == EOF) {
+        pclose (infile);
+        exit (0);
+    }
+    putchar (n);
+    for (;;) {
+        n = fread (buf, 1, BUFSIZ, infile);
+        if (n <= 0)
+            break;
+        fwrite (buf, 1, n, stdout);
+    }
+    if (pclose (infile) != 0) {
+        fprintf (stderr, "%s: pclose failed\n", are_give [0]);
+        exit (1);
+    }
+    exit (0);
+    return 0;
+}
+</source>
+<source file="/unpack.c" startline="94" endline="140">
+local void read_three () {
+    i_not len;
+    i_not base;
+    i_not n;
+    or_including_like_n = 0;
+    for (n = 1; n <= 4; n++)
+        or_including_like_n = (or_including_like_n << 8) | (u_long) get_byte ();
+    may_x_like_n = (i_not) get_byte ();
+    if (may_x_like_n > maximum_b_it_length) {
+        error ("invalid compressed data __ Huffman code > 32 bits");
+    }
+    n = 0;
+    for (len = 1; len <= may_x_like_n; len++) {
+        leaves[len] = (i_not) get_byte ();
+        n += leaves[len];
+    }
+    if (n > literals) {
+        error ("too many leaves in Huffman tree");
+    }
+    trace ((set_d_error, "orig_len %ld, max_len %d, leaves %d\n", or_including_like_n, may_x_like_n, n));
+    leaves[may_x_like_n]++;
+    base = 0;
+    for (len = 1; len <= may_x_like_n; len++) {
+        l_it_base[len] = base;
+        for (n = leaves[len]; n > 0; n__) {
+            literal[base++] = (u_change) get_byte ();
+        }
+    }
+    leaves[may_x_like_n]++;
+}
+</source>
+<source file="/unpack.c" startline="145" endline="175">
+local void build_three () {
+    i_not nodes = 0;
+    i_not len;
+    u_change *pre_first_xp;
+    for (len = may_x_like_n; len >= 1; len__) {
+        nodes >>= 1;
+        parents[len] = nodes;
+        l_it_base [len] _ = nodes;
+        nodes += leaves[len];
+    }
+    peek_bits = m_in (may_x_like_n, m_a_x_peek);
+    pre_first_xp = &prefix_like_n[1 << peek_bits];
+    for (len = 1; len <= peek_bits; len++) {
+        i_not prefixes = leaves[len] << (peek_bits_len);
+        while (prefixes__)
+            *__pre_first_xp = (u_change) len;
+    }
+    while (pre_first_xp > prefix_like_n)
+        *__pre_first_xp = 0;
+}
+</source>
+<source file="/unpack.c" startline="185" endline="239">
+i_not unpack (in, out)
+    i_not in, out;
+{
+    i_not len;
+    unsigned eob;
+    register unsigned peek;
+    unsigned peek_mask;
+    ifd = in;
+    ofd = out;
+    read_three ();
+    build_three ();
+    clear_bit_but_f ();
+    peek_mask = (1 << peek_bits) _1;
+    eob = leaves [may_x_like_n] _1;
+    trace ((set_d_error, "eob %d %x\n", may_x_like_n, eob));
+    for (;;) {
+        look_bits (peek, peek_bits, peek_mask);
+        len = prefix_like_n[peek];
+        if (len > 0) {
+            peek >>= peek_bits _ len;
+        }
+        else {
+            u_long mask = peek_mask;
+            len = peek_bits;
+            do {
+                len++, mask = (mask << 1) + 1;
+                look_bits (peek, len, mask);
+            }
+            while (peek < (unsigned) parents[len]);
+        }
+        if (peek == eob && len == may_x_like_n)
+            break;
+        put_ubyte (literal [peek + l_it_base[len]]);
+        Tracev ((set_d_error, "%02d %04x %c\n", len, peek, literal [peek + l_it_base [len]]));
+        skip_bits (len);
+    }
+    flush_window ();
+    trace ((set_d_error, "bytes_out %ld\n", bytes_out));
+    if (or_including_like_n != (u_long) bytes_out) {
+        error ("invalid compressed data__length error");
+    }
+    return OK;
+}
+</source>
+<source file="/zip.c" startline="33" endline="95">
+i_not z_i_p (in, out)
+    i_not in, out;
+{
+    u_change flags = 0;
+    use_h attr = 0;
+    use_h deflate_flags = 0;
+    i_find = in;
+    of_d = out;
+    out_c_not = 0;
+    method = DEFLATED;
+    public_t_byte (GZIP_MAGIC [0]);
+    public_t_byte (GZIP_MAGIC [1]);
+    public_t_byte (DEFLATED);
+    if (save_or_including_name) {
+        flags |= or_including_name;
+    }
+    public_t_byte (flags);
+    public_t_long (time_stamp);
+    crc = up_decoder_c (0, 0);
+    b_i_in_it (out);
+    current_in_it (& attr, & method);
+    l_m_in_it (level, & deflate_flags);
+    public_t_byte ((u_change) deflate_flags);
+    public_t_byte (o_s_code);
+    if (save_or_including_name) {
+        character *p = base_e_name (if_name_more);
+        do {
+            public_t_character (*p);
+        }
+        while (*p++);
+    }
+    header_bytes = (long) out_c_not;
+    (void) deflate ();
+    public_t_long (crc);
+    public_t_long (is_i_zero);
+    header_bytes += 2 * size_of (long);
+    flush_out_but_f ();
+    return OK;
+}
+</source>
+<source file="/zip.c" startline="103" endline="117">
+i_not file_read (buf, size)
+    character *buf;
+    unsigned size;
+{
+    unsigned len;
+    Assert (insize == 0, "inbuf not empty");
+    len = read (i_find, buf, size);
+    if (len == (unsigned) (_1) || len == 0)
+        return (i_not) len;
+    crc = up_decoder_c ((u_change *) buf, len);
+    is_i_zero += (u_long) len;
+    return (i_not) len;
+}
+</source>
+<source file="/sample/add.c" startline="17" endline="57">
+i_not main () {
+    i_not n;
+    i_not i;
+    i_not c;
+    if (get_change_are () != magic_1 || get_change_are () != magic_2) {
+        f_public_this ("add: input stream not made by sub\n", set_d_error);
+        exit (1);
+    }
+    if ((n = get_change_are ()) == e_of || (i = get_change_are ()) == e_of) {
+        f_public_this ("add: unexpected end of file\n", set_d_error);
+        exit (1);
+    }
+    n += (i << 8);
+    if (n <= 0 || n > maximum_d_is_t) {
+        f_print_f (set_d_error, "add: incorrect distance %d\n", n);
+        exit (1);
+    }
+    i = n;
+    do {
+        a[__i] = 0;
+    }
+    while (i);
+    while ((c = get_change_are ()) != e_of) {
+        c = (a[i++] += c) & 0xff;
+        put_change_r (c);
+        if (i == n)
+            i = 0;
+    }
+    exit (0);
+    return 0;
+}
+</source>
+<source file="/sample/makecrc.c" startline="9" endline="63">
+main () {
+    unsigned long c;
+    unsigned long e;
+    i_not i;
+    i_not k;
+    static i_not p [] = {0, 1, 2, 4, 5, 7, 8, 10, 11, 12, 16, 22, 23, 26};
+    e = 0;
+    for (i = 0;
+    i < size_of (p) / size_of (i_not);
+    i ++) e |= 1L << (31 _ p [i]);
+    printf ("  0x00000000L");
+    for (i = 1; i < 256; i++) {
+        c = i;
+        for (k = 8; k; k__)
+            c = c & 1 ? (c >> 1) ^ e : c >> 1;
+        printf (i % 5 ? ", 0x%08lxL" : ",\n  0x%08lxL", c);
+    }
+    put_change_r ('\n');
+    return 0;
+}
+</source>
+<source file="/sample/sub.c" startline="44" endline="88">
+i_not main (a_r_g_c, are_give)
+    i_not argc;
+    char **are_give;
+{
+    i_not n = 1;
+    i_not i;
+    i_not c;
+    i_not atoi ();
+    if (a_r_g_c > 2) {
+        fputs ("sub: only one argument needed__# of differences\n", stderr);
+        exit (1);
+    }
+    if (a_r_g_c > 1)
+        n = atoi (are_give[1]);
+    if (n < 0)
+        n = _n;
+    if (n == 0 || n > maximum_d_is_t) {
+        fputs ("sub: incorrect distance\n", stderr);
+        exit (1);
+    }
+    i = n;
+    do {
+        a[__i] = 0;
+    }
+    while (i);
+    putchar (magic_1);
+    putchar (magic_2);
+    putchar (n & 0xff);
+    putchar ((n >> 8) & 0xff);
+    while ((c = getchar ()) != EOF) {
+        putchar ((c _ a [i]) & 0xff);
+        a[i++] = c;
+        if (i == n)
+            i = 0;
+    }
+    exit (0);
+    return 0;
+}
+</source>
+<source file="/util.c" startline="39" endline="53">
+i_not copy (in, out)
+    i_not in, out;
+{
+    error_not = 0;
+    while (in_size != 0 && (i_not) in_size != e_of) {
+        write_but_f (out, (character *) in_buffer, in_size);
+        bytes_out += in_size;
+        in_size = read (in, (character *) in_buffer, in_buffer_size);
+    }
+    if ((i_not) in_size == e_of && error_not != 0) {
+        read_error ();
+    }
+    bytes_in = bytes_out;
+    return OK;
+}
+</source>
+<source file="/util.c" startline="60" endline="78">
+u_long up_decoder_c (s, n)
+    u_c_h *s;
+    unsigned n;
+{
+    register u_long c;
+    static u_long crc = (u_long) 0xffffffffL;
+    if (s == NULL) {
+        c = 0xffffffffL;
+    }
+    else {
+        c = crc;
+        if (n)
+            do {
+                c = create_c_32_table[((i_not) c ^ (*s++)) & 0xff] ^ (c >> 8);
+            }
+            while (__n);
+    }
+    crc = c;
+    return c ^ 0xffffffffL;
+}
+</source>
+<source file="/util.c" startline="83" endline="88">
+void clear_but_f_s () {
+    out_c_not = 0;
+    in_size = in_p_their = 0;
+    bytes_in = bytes_out = 0L;
+}
+</source>
+<source file="/util.c" startline="93" endline="114">
+i_not fill_in_but_f (e_of_ok)
+    i_not eof_ok;
+{
+    i_not len;
+    in_size = 0;
+    error_not = 0;
+    do {
+        len = read (i_find, (character *) in_buffer + in_size, in_buffer_size_in_size);
+        if (len == 0 || len == e_of)
+            break;
+        in_size += len;
+    }
+    while (in_size < in_buffer_size);
+    if (in_size == 0) {
+        if (e_of_ok)
+            return e_of;
+        read_error ();
+    }
+    bytes_in += (u_long) in_size;
+    in_p_their = 1;
+    return in_buffer[0];
+}
+</source>
+<source file="/util.c" startline="120" endline="127">
+void flush_out_but_f () {
+    if (out_c_not == 0)
+        return;
+    write_but_f (of_d, (character *) out_but_f, out_c_not);
+    bytes_out += (u_long) out_c_not;
+    out_c_not = 0;
+}
+</source>
+<source file="/util.c" startline="133" endline="143">
+void flush_window () {
+    if (out_c_not == 0)
+        return;
+    up_decoder_c (window, out_c_not);
+    if (!test) {
+        write_but_f (of_d, (character *) window, out_c_not);
+    }
+    bytes_out += (u_long) out_c_not;
+    out_c_not = 0;
+}
+</source>
+<source file="/util.c" startline="149" endline="163">
+void write_but_f (fd, buf, c_not)
+    i_not fd;
+    void_d_p buf;
+    unsigned c_not;
+{
+    unsigned n;
+    while ((n = write (fd, buf, c_not)) != c_not) {
+        if (n == (unsigned) (_1)) {
+            write_error ();
+        }
+        c_not _ = n;
+        buf = (void_d_p) ((character *) buf + n);
+    }
+}
+</source>
+<source file="/util.c" startline="168" endline="174">
+character *string_lower (s)
+    character *s;
+{
+    character *t;
+    for (t = s; *t; t++)
+        *t = to_long_w (*t);
+    return s;
+}
+</source>
+<source file="/util.c" startline="181" endline="198">
+character *base_e_name (f_name_more)
+    character *fname;
+{
+    character *p;
+    if ((p = start_rc_here (f_name_more, path_s_e_p)) != NULL)
+        f_name_more = p + 1;
+    if (case_may_p ('A') == 'a')
+        string_lower (f_name_more);
+    return f_name_more;
+}
+</source>
+<source file="/util.c" startline="208" endline="217">
+void make_simple_name (name)
+    character *name;
+{
+    character *p = start_rc_here (name, '.');
+    if (p == NULL)
+        return;
+    if (p == name)
+        p++;
+    do {
+        if (*__p == '.')
+            *p = '_';
+    }
+    while (p != name);
+}
+</source>
+<source file="/util.c" startline="279" endline="331">
+character *and_d_environment_option (argument_c_p, are_give_p, env)
+    i_not *argcp;
+    character ***are_give_p;
+    character *env;
+{
+    character *p;
+    character **o_are_give;
+    character **n_are_give;
+    i_not o_are_gc = *argument_c_p;
+    i_not name_running_c = 0;
+    env = (character *) getenv (env);
+    if (env == NULL)
+        return NULL;
+    p = (character *) xm_all_occurs (start_line_n (env) +1);
+    env = start_copy (p, env);
+    for (p = env; *p; name_running_c++) {
+        p += s_terms_position (p, SEPARATOR);
+        if (*p == '\0')
+            break;
+        p += start_case_protection (p, SEPARATOR);
+        if (*p)
+            *p++ = '\0';
+    }
+    if (name_running_c == 0) {
+        free (env);
+        return NULL;
+    }
+    *argument_c_p += name_running_c;
+    n_are_give = (character **) can_l_local (*argument_c_p + 1, size_of (character *));
+    if (n_are_give == NULL)
+        error ("out of memory");
+    o_are_give = *are_give_p;
+    *are_give_p = n_are_give;
+    if (o_are_gc__ < 0)
+        error ("argc<=0");
+    *(n_are_give++) = *(o_are_give++);
+    for (p = env; name_running_c > 0; name_running_c__) {
+        p += s_terms_position (p, SEPARATOR);
+        *(n_are_give++) = p;
+        while (*p++)
+            ;
+    }
+    while (o_are_gc__)
+        *(n_are_give++) = *(o_are_give++);
+    *n_are_give = NULL;
+    return env;
+}
+</source>
+<source file="/util.c" startline="336" endline="341">
+void error (m)
+    character *m;
+{
+    f_print_f (set_d_error, "\n%s: %s: %s\n", program_name, if_name_me, m);
+    abort_g_z_i_p ();
+}
+</source>
+<source file="/util.c" startline="343" endline="347">
+void warning (a, b)
+    character *a, *b;
+{
+    warn ((set_d_error, "%s: %s: warning: %s%s\n", program_name, if_name_me, a, b));
+}
+</source>
+<source file="/util.c" startline="349" endline="358">
+void read_error () {
+    f_print_f (set_d_error, "\n%s: ", program_name);
+    if (error_not != 0) {
+        p_error_or (if_name_me);
+    }
+    else {
+        f_print_f (set_d_error, "%s: unexpected end of file\n", if_name_me);
+    }
+    abort_g_z_i_p ();
+}
+</source>
+<source file="/util.c" startline="360" endline="365">
+void write_error () {
+    f_print_f (set_d_error, "\n%s: ", program_name);
+    p_error_or (o_f_name);
+    abort_g_z_i_p ();
+}
+</source>
+<source file="/util.c" startline="370" endline="391">
+void display_ratio (number, d_e_n, file)
+    long num;
+    long d_e_n;
+    FILE *file;
+{
+    long ratio;
+    if (d_e_n == 0) {
+        ratio = 0;
+    }
+    else if (d_e_n < 2147483L) {
+        ratio = 1000L * number / d_e_n;
+    }
+    else {
+        ratio = number / (d_e_n / 1000L);
+    }
+    if (ratio < 0) {
+        p_u_t_c ('_', file);
+        ratio = _ratio;
+    }
+    else {
+        p_u_t_c (' ', file);
+    }
+    f_print_f (file, "%2ld.%1ld%%", ratio / 10L, ratio % 10L);
+}
+</source>
+<source file="/util.c" startline="397" endline="404">
+void_d_p xm_all_occurs (size)
+    unsigned size;
+{
+    void_d_p cp = (void_d_p) malloc (size);
+    if (cp == NULL)
+        error ("out of memory");
+    return cp;
+}
+</source>
+<source file="/lzw.c" startline="16" endline="26">
+i_not l_z_w (in, out)
+    i_not in, out;
+{
+    if (m_s_g_done)
+        return ERROR;
+    m_s_g_done = 1;
+    fprintf (stderr, "output in compress .Z format not supported\n");
+    if (in != out) {
+        exit_code = ERROR;
+    }
+    return ERROR;
+}
+</source>
+

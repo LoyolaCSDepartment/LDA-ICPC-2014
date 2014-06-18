@@ -1,0 +1,43 @@
+#!/bin/tcsh
+
+if ($#argv != 3) then
+    echo "Usage:  do-nicad <language [c java]> <package name> <src directory>"
+    exit -1
+endif
+
+set language = $argv[1]
+
+# set name = `pwd`/$argv[2].nicad.xml
+set name = $argv[2].nicad.xml
+echo "name = " $name
+
+set abs_or_rel = `echo $argv[3] | sed -e 's/\(.\).*/\1/'`
+if (x$abs_or_rel == 'x/') then
+    set dir = $argv[3]
+else
+    set dir = `pwd`/$argv[3]
+endif
+
+# echo $abs_or_rel 
+# echo "dir is " $dir
+
+
+find $dir -name "*.ifdefed" -exec rm {} \;
+rm -r "$dir"_functions* 
+
+#pushd /research/tools//NiCad-2.9
+#set path = ( /research/tools/txl/bin $path )
+
+nicad functions $language  $dir
+
+popd
+
+cat  "$dir"_functions*.log
+
+/bin/mv "$dir"_functions.xml $name
+find $dir -name "*.ifdefed" -exec rm {} \;
+rm -r "$dir"_functions*
+
+
+exit 0
+

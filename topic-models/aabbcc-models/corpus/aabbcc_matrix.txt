@@ -1,0 +1,6 @@
+list(
+  structure(c(0L,1L,0L,1L,0L,1L,0L,1L), .Dim = c(2L,4L)),
+  structure(c(1L,1L,1L,1L,1L,1L,1L,1L,1L,1L), .Dim = c(2L,5L)),
+  structure(c(0L,1L,0L,1L,0L,1L,1L,1L,1L,1L,1L,1L), .Dim = c(2L,6L)),
+  structure(c(0L,1L,0L,1L,0L,1L,0L,1L,2L,1L,2L,1L), .Dim = c(2L,6L))
+)

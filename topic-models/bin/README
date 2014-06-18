@@ -1,0 +1,5 @@
+To build the .c files in this directory, type `make all`. 
+
+Inspect the Makefile for specific goals to build individual files
+
+`make clean` will remove the generated executables

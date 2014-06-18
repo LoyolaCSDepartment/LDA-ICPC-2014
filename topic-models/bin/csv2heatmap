@@ -1,0 +1,23 @@
+#!/bin/tcsh
+
+# may need to run on rerun
+# csv2heatmap out-R2/cooked-aabbcc-*csv
+
+if ($#argv == 0) then
+    echo "usage: csv2heatmap *csv"
+    exit -1
+endif
+
+set base = "<FIX ME>/topic-models"
+  # sed -e 's/ /_/g' -e 's/,/ /g' < $x > ! matrix.dat
+
+foreach x ( $argv )
+  sed -e 's/,/ /g' < $x > ! matrix.dat
+  R --vanilla < $base/bin/heatmap.R
+  mv heatmap.png $x:r.png
+end
+
+# /bin/rm matrix.dat
+
+exit 0
+

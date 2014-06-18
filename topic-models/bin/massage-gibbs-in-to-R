@@ -1,0 +1,113 @@
+#!/usr/bin/perl
+# assume input file include space separated words one line per document with first line being document count
+
+use strict;
+use warnings;
+use File::Basename;
+local $SIG{__WARN__} = \&Carp::cluck;
+
+($#ARGV == 0) or die "usage: do <gibbs input file>";
+
+my $infile = $ARGV[0];
+my($filename, $directory) = fileparse($infile);
+
+#my $name = shift @ARGV;
+my $name = "gibbs";
+my %vocab;
+my @words = ();
+my @docs = ();
+my $wordCount = 0;
+my @fileData = ();
+
+open DOCNAMES, ">$directory/$name"."_mapping.txt" or die $!;
+open VOCAB, ">$directory/$name"."_vocab.txt" or die $!;
+open MATRIX, ">$directory/$name"."_matrix.txt" or die $!;
+
+# suck in data from corpus files
+my $number_of_lines = <>;
+my $count = 1;
+while (<>)        
+{
+  chomp($_);
+  push @fileData, [ $_ ];
+  print DOCNAMES "d", $count, "\n";
+  $count++;
+}
+
+close DOCNAMES;
+
+
+foreach (@fileData) 
+{
+  processFile($_);
+}
+
+# need order to match assignment in %vocab so don't  "sort @words;"
+
+print VOCAB "c(\"$words[0]\"";
+shift @words;
+my $x;
+foreach $x (@words)
+{
+  print VOCAB ",\"$x\"";
+}
+print VOCAB ")\n";
+close VOCAB;
+
+
+print MATRIX "list(\n";
+my $llast = pop @fileData;
+foreach (@fileData) 
+{
+  outputFile($_);
+  print MATRIX ",\n";
+}
+outputFile($llast);
+print MATRIX "\n)\n";
+close MATRIX;
+
+
+sub outputFile
+{
+  my $words = $_[0];
+  print MATRIX "  structure(c(";
+  my $wc = 1;
+  foreach (@$words)
+  {
+    chomp($_);
+    my @ws = split(" ", $_);
+    my $lastWord = pop @ws;
+    foreach $x (@ws)
+    {
+      chomp $x;
+      my $n = $vocab{$x};
+      print MATRIX $n, "L,1L,";
+      $wc++;
+    }
+    my $n = $vocab{$lastWord};
+    print MATRIX $n, "L,1L";
+  }
+
+  print MATRIX "), .Dim = c(2L,", $wc, "L))";
+}
+
+
+sub processFile
+{
+  my $words = $_[0];
+  foreach (@$words)
+  {
+    chomp($_);
+    my @ws = split(" ", $_);
+    foreach $x (@ws)
+    {
+      chomp $x;
+      next if (exists $vocab{$x});
+      $vocab{$x} = $wordCount;
+      $wordCount++;
+      push @words, "$x";
+    }
+  }
+}
+
+

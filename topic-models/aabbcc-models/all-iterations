@@ -1,0 +1,8 @@
+#!/bin/csh
+#
+# experiment with iteration count using 0 and then 2000 iterations of burn in
+
+foreach iterations ( 1 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384 )
+  cook-aabbcc 1e-02 $iterations
+end
+

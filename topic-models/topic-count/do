@@ -1,0 +1,45 @@
+#!/bin/csh -f
+
+# driver for replicating topic count search "estimating the optional number of topics"
+# uses nicad to build xml files (see FIX ME)
+
+if ($#argv != 3) then
+    echo "Usage:  do <samples> <training iterations> <input xml file>"
+    # e.g., do 10 2000 .../sources/cook.xml 
+    # R's lda hard codes burn-in to 2000
+    # R can't output intermetiate models, so run it multiple times and then average
+    exit -1
+endif
+
+set samples = $argv[1]
+set training_iterations = $argv[2]
+set infile = $argv[3]
+set name = $infile:t:r   # assumes filename is .../<name>.xml
+
+set output_directory = <FIX ME>
+
+xmlsplit.py $infile $output_directory
+ldamake.py $output_directory 
+concept_eval.py $output_directory $name $training_iterations $samples
+
+set tag = "$name-$samples-$training_iterations.$$"
+set out = out-$tag
+set pics = pics-$tag
+mkdir_quiet $out
+mkdir_quiet $pics
+
+/bin/mv $output_directory/average_* $out
+/bin/mv $output_directory/movie_data_$name.txt \
+        movie_data_$tag.txt
+echo "nike :: " /bin/rm -r $output_directory
+echo "graphing averages from the files " $out/*
+
+foreach f ($out/*)
+  ./graph-it $f $pics
+end
+
+echo "make movie commented out ... STILL NEED TO AVERAGE"
+# make-movie movie_data_$tag.txt
+# mv output.avi movie_data_$tag.avi
+exit 0
+
