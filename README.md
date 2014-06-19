@@ -23,6 +23,19 @@ and uncomment out the `MACHINESIZE = -m64` line and comment out the `MACHINESIZE
 
 Then, type `make` in the root of the NiCad directory as you normally would.
 
+If you want to move the NiCad directory to another location after building, remember to edit
+the nicad3 script and put the new location in the LIB variable
+
+Now, ensure that the location of the NiCad directory is on your PATH
+
+Finally, create an alias for the nicad3 executable so it may be executed as `nicad`
+
+For Bash, something like this in your .bashrc would work:
+
+```bash
+alias nicad='nicad3'
+```
+
 ### Usage
 
 See the README files in each directory. Additionally, there are several "FIX ME" placeholders
