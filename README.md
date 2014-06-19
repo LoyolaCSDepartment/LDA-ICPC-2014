@@ -15,6 +15,13 @@ Code and materials from the presentation "Understanding LDA in Source Code Analy
 * [TXL](http://www.txl.ca/ndownload.html)
 * [NiCad Clone Detector](http://www.txl.ca/nicaddownload.html)
 
+#### Special Instructions for Installing NiCad
+
+Once TXL is installed on your system, you'll need to download and install NiCad. 
+If your machine is 64 bit, you'll need to edit tools/Makefile in the NiCad directory
+and uncomment out the `MACHINESIZE = -m64` line and comment out the `MACHINESIZE = -m32` line
+
+Then, type `make` in the root of the NiCad directory as you normally would.
 
 ### Usage
 
