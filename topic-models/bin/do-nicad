@@ -30,7 +30,7 @@ rm -r "$dir"_functions*
 
 nicad functions $language  $dir
 
-popd
+#popd
 
 cat  "$dir"_functions*.log
 
